@@ -5,11 +5,13 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login
 
 import json
 
 from utils import parseCSVFileFromDjangoFile, isNumber, returnTestChartData
 from getInsight import parseAuthorCSVFile, getReviewScoreInfo, getAuthorInfo, getReviewInfo, getSubmissionInfo
+from models import Member
 
 # Create your views here.
 # Note: a view is a func taking the HTTP request and returns sth accordingly
@@ -20,6 +22,22 @@ def index(request):
 def test(request):
 	return HttpResponse("<h1>This is the very first HTTP request!</h1>")
 
+def login(request):
+	print "Checking if user is able to log in"
+	if request.method == "POST":
+		username = request.POST['username']
+		password = request.POST['password']
+		user = authenticate(request, username=username, password=password)
+		if user is not None:
+			login(request,user)
+			#redirect to home page for uploading
+		#else:
+			#return 'invalid login'
+	else:
+		return HttpResponse("POST method not defined")
+
+#add in register method
+#add in retrieve-data method (subjected to user)
 # Note: csr: cross site request, adding this to enable request from localhost
 @csrf_exempt
 def uploadCSV(request):

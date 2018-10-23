@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from polls.views import index, test, uploadCSV
+from polls.views import index, test, uploadCSV, login
 
 urlpatterns = [
 	url(r'^$', index, name='home'),		# This is the default url
@@ -24,4 +24,5 @@ urlpatterns = [
     url(r'^index/', index, name = 'index'),
     url(r'^test/', test, name = 'test'),
     url(r'^upload/', uploadCSV, name = 'upload'),
+    url(r'^login/', login, name='login')
 ]
