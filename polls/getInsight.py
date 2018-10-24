@@ -4,6 +4,12 @@ from collections import Counter
 
 from utils import parseCSVFile, testCSVFileFormatMatching, isNumber, parseSubmissionTime
 
+#activate sesssions
+from importlib import import_module
+from django.conf import settings
+SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
+s = SessionStore()
+
 def parseAuthorCSVFile(inputFile):
 
 	csvFile = inputFile
@@ -34,6 +40,9 @@ def getAuthorInfo(inputFile):
 
 	lines = parseCSVFile(inputFile)[1:]
 	lines = [ele for ele in lines if ele]
+
+	# store in session
+	s['authorLines'] = lines;
 
 	authorList = []
 	for authorInfo in lines:
@@ -98,10 +107,10 @@ def getReviewInfo(inputFile):
 	recommended principles:
 	Yes: 1; No: 0; weighted average of the 1 and 0's, also using reviewer's confidence as the weights
 	"""
-
 	parsedResult = {}
 	lines = parseCSVFile(inputFile)
 	lines = [ele for ele in lines if ele]
+	s['reviewLines'] = lines
 	evaluation = [str(line[6]).replace("\r", "") for line in lines]
 	submissionIDs = set([str(line[1]) for line in lines])
 
@@ -169,6 +178,7 @@ def getSubmissionInfo(inputFile):
 	parsedResult = {}
 	lines = parseCSVFile(inputFile)[1:]
 	lines = [ele for ele in lines if ele]
+	s['submissionLines'] = lines
 	acceptedSubmission = [line for line in lines if str(line[9]) == 'accept']
 	rejectedSubmission = [line for line in lines if str(line[9]) == 'reject']
 
@@ -270,6 +280,87 @@ def getSubmissionInfo(inputFile):
 	parsedResult['comparableAcceptanceRate'] = comparableAcceptanceRate
 
 	return {'infoType': 'submission', 'infoData': parsedResult}
+
+# this method should only be called when all 3 files have been uploaded at least once
+def getCrossTableInfo():
+	"""
+	data formats:
+	authorLines - submission ID | f name | s name | email | country | affiliation | page | person ID | corresponding
+	submissionLines - submission ID | track ID | track name | title | authors | submit time | last update time | form fields | keywords | decision | notified | reviews sent | abstract
+	reviewLines - review ID | paper ID? | reviewer ID | reviewer name | unknown | text | scores | overall score | unknown | unknown | unknown | unknown | date | time | recommend?
+	"""
+	getCrossTable()
+	parsedResult = {}
+
+	'''
+	# process author list
+	for authorInfo in authorLines:
+		# authorInfo = line.replace("\"", "").split(",")
+		# print authorInfo
+		authorList.append(
+			{'name': authorInfo[1] + " " + authorInfo[2]})
+
+	# build submission list
+	for submissionInfo in submissionLines:
+		submissionList.append({'submissionID': submissionInfo[0], 'decision': submissionInfo[9]})
+
+	authors = [ele['name'] for ele in authorList if
+			   ele]  # adding in the if ele in case of empty strings; same applies below
+	topAuthors = Counter(authors).most_common(10)
+	parsedResult['topAuthors'] = {'labels': [ele[0] for ele in topAuthors], 'data': [ele[1] for ele in topAuthors]}
+
+	countries = [ele['country'] for ele in authorList if ele]
+	topCountries = Counter(countries).most_common(10)
+	parsedResult['topCountries'] = {'labels': [ele[0] for ele in topCountries],
+									'data': [ele[1] for ele in topCountries]}
+
+	affiliations = [ele['affiliation'] for ele in authorList if ele]
+	topAffiliations = Counter(affiliations).most_common(10)
+	parsedResult['topAffiliations'] = {'labels': [ele[0] for ele in topAffiliations],
+									   'data': [ele[1] for ele in topAffiliations]}
+
+	return {'infoType': 'author', 'infoData': parsedResult}
+	'''
+def getCrossTable():
+	"""
+	data formats:
+	authorLines - submission ID | f name | s name | email | country | affiliation | page | person ID | corresponding
+	submissionLines - submission ID | track ID | track name | title | authors | submit time | last update time | form fields | keywords | decision | notified | reviews sent | abstract
+	reviewLines - review ID | paper ID? | reviewer ID | reviewer name | unknown | text | scores | overall score | unknown | unknown | unknown | unknown | date | time | recommend?
+	"""
+	# iterate through submission list, storing each submission id as a key whose values contain author, submission and review details
+	# a submission and have multiple authors and multiple reviews
+	crossTable = {}
+	authorLines = s['authorLines']
+	submissionLines = s['submissionLines']
+	reviewLines = s['reviewLines']
+	# store all submission details with submission ID as the key
+	for submissionDetail in submissionLines:
+		submissionID = submissionDetail[0]
+		crossTable[submissionID] = {}
+		crossTable[submissionID]['submission'] = submissionDetail
+		crossTable[submissionID]['author'] = []
+		crossTable[submissionID]['review'] = []
+
+	# store all author details into submission ID
+	for authorDetail in authorLines:
+		submissionID = authorDetail[0]
+		# append to back if an author already exists
+		if len(crossTable[submissionID]['author']) != 0:
+			crossTable[submissionID]['author'].append(authorDetail)
+		else:
+			crossTable[submissionID]['author'] = [authorDetail]
+
+	# store all review details into submission ID
+	for reviewDetail in reviewLines:
+		submissionID = reviewDetail[1]
+		# append to back if a review already exists
+		if len(crossTable[submissionID]['review']) != 0:
+			crossTable[submissionID]['review'].append(reviewDetail)
+		else:
+			crossTable[submissionID]['review'] = [reviewDetail]
+
+	return crossTable
 
 if __name__ == "__main__":
 	parseCSVFile(fileName)
