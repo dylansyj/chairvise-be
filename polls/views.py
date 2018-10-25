@@ -37,7 +37,11 @@ def login(request):
 		return HttpResponse("POST method not defined")
 
 #add in register method
+
+
 #add in retrieve-data method (subjected to user)
+
+
 # Note: csr: cross site request, adding this to enable request from localhost
 @csrf_exempt
 def uploadCSV(request):
