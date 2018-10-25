@@ -15,6 +15,17 @@ from models import Member
 
 # Create your views here.
 # Note: a view is a func taking the HTTP request and returns sth accordingly
+from rest_framework.decorators import api_view
+from django.http import HttpResponse
+
+
+def public(request):
+    return HttpResponse("You don't need to be authenticated to see this")
+
+
+@api_view(['GET'])
+def private(request):
+    return HttpResponse("You should not see this message if not authenticated!")
 
 def index(request):
 	return HttpResponse("Hello, world. You're at the polls index.")
