@@ -300,11 +300,44 @@ def getCrossTableInfo():
 			for author in row['author']:
 				affiliations.append(author[5])
 	topAffiliations = Counter(affiliations).most_common(10)
-	print(topAffiliations)
-	parsedResult['topAffiliations'] = {'labels': [ele[0] for ele in topAffiliations], 'data': [ele[1] for ele in topAffiliations]}
-	print(parsedResult['topAffiliations'])
-	return {'infoType': 'crossTable', 'infoData': parsedResult}
+	parsedResult['topAffiliationsByAcceptance'] = {'labels': [ele[0] for ele in topAffiliations], 'data': [ele[1] for ele in topAffiliations]}
 
+	# get top scoring affiliations
+	affiliationsWithAvgScores = {}
+	# store affiliation -> [total score, count]
+	affiliationsWithScoreAndCount = {}
+	for row in crossTable.values():
+		totalTabulatedScore = 0
+		reviews = row['review']
+		numReviews = len(reviews)
+		if numReviews > 0:
+			for review in reviews:
+				# get review avg tabulated score
+				confidence = float(review[6].split("\n")[1].split(": ")[1])
+				score = float(review[6].split("\n")[0].split(": ")[1])
+				totalTabulatedScore += (confidence * score)
+			# update each affiliation new total score and count
+			authors = row['author']
+			for author in authors:
+				affi = author[5]
+				# update if past affiliations have been recorded
+				if affi in affiliationsWithScoreAndCount:
+					currAffi = affiliationsWithScoreAndCount[affi]
+					newTotal = currAffi[0] + totalTabulatedScore
+					newCount = currAffi[1] + numReviews
+					affiliationsWithScoreAndCount[affi] = [newTotal, newCount]
+				else:
+					affiliationsWithScoreAndCount[affi] = [totalTabulatedScore, numReviews]
+	# get average scores for each affi
+	for affi, values in affiliationsWithScoreAndCount.iteritems():
+		avgScore = values[0] / values[1]
+		affiliationsWithAvgScores[affi] = avgScore
+
+	# get top 10 affis according to score
+	sorted_affi = sorted(affiliationsWithAvgScores.items(), key=lambda (k, v): v, reverse=True)[:10]
+
+	parsedResult['topAffiliationsByScore'] = {'labels': [ele[0] for ele in sorted_affi],
+											  'data': [ele[1] for ele in sorted_affi]}
 
 	'''
 	parsedResult = {}
@@ -336,6 +369,9 @@ def getCrossTableInfo():
 
 	return {'infoType': 'author', 'infoData': parsedResult}
 	'''
+
+	return {'infoType': 'crossTable', 'infoData': parsedResult}
+
 def getCrossTable():
 	"""
 	data formats:
