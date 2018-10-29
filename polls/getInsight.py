@@ -339,36 +339,42 @@ def getCrossTableInfo():
 	parsedResult['topAffiliationsByScore'] = {'labels': [ele[0] for ele in sorted_affi],
 											  'data': [ele[1] for ele in sorted_affi]}
 
-	'''
-	parsedResult = {}
+	# get top scoring countries
+	countriesWithAvgScores = {}
+	# store countries -> [total score, count]
+	countriesWithScoreAndCount = {}
+	for row in crossTable.values():
+		totalTabulatedScore = 0
+		reviews = row['review']
+		numReviews = len(reviews)
+		if numReviews > 0:
+			for review in reviews:
+				# get review avg tabulated score
+				confidence = float(review[6].split("\n")[1].split(": ")[1])
+				score = float(review[6].split("\n")[0].split(": ")[1])
+				totalTabulatedScore += (confidence * score)
+			# update each country new total score and count
+			authors = row['author']
+			for author in authors:
+				country = author[4]
+				# update if past countries have been recorded
+				if country in countriesWithScoreAndCount:
+					currCountry = countriesWithScoreAndCount[country]
+					newTotal = currCountry[0] + totalTabulatedScore
+					newCount = currCountry[1] + numReviews
+					countriesWithScoreAndCount[country] = [newTotal, newCount]
+				else:
+					countriesWithScoreAndCount[country] = [totalTabulatedScore, numReviews]
+	# get average scores for each country
+	for country, values in countriesWithScoreAndCount.iteritems():
+		avgScore = values[0] / values[1]
+		countriesWithAvgScores[country] = avgScore
 
-	lines = parseCSVFile(inputFile)[1:]
-	lines = [ele for ele in lines if ele]
+	# get top 10 countries according to score
+	sorted_countries = sorted(countriesWithAvgScores.items(), key=lambda (k, v): v, reverse=True)[:10]
 
-	# store in session
-	s['authorLines'] = lines;
-
-	authorList = []
-	for authorInfo in lines:
-		# authorInfo = line.replace("\"", "").split(",")
-		# print authorInfo
-		authorList.append({'name': authorInfo[1] + " " + authorInfo[2], 'country': authorInfo[4], 'affiliation': authorInfo[5]})
-	
-
-	authors = [ele['name'] for ele in authorList if ele] # adding in the if ele in case of empty strings; same applies below
-	topAuthors = Counter(authors).most_common(10)
-	parsedResult['topAuthors'] = {'labels': [ele[0] for ele in topAuthors], 'data': [ele[1] for ele in topAuthors]}
-
-	countries = [ele['country'] for ele in authorList if ele]
-	topCountries = Counter(countries).most_common(10)
-	parsedResult['topCountries'] = {'labels': [ele[0] for ele in topCountries], 'data': [ele[1] for ele in topCountries]}
-
-	affiliations = [ele['affiliation'] for ele in authorList if ele]
-	topAffiliations = Counter(affiliations).most_common(10)
-	parsedResult['topAffiliations'] = {'labels': [ele[0] for ele in topAffiliations], 'data': [ele[1] for ele in topAffiliations]}
-
-	return {'infoType': 'author', 'infoData': parsedResult}
-	'''
+	parsedResult['topCountriesByScore'] = {'labels': [ele[0] for ele in sorted_countries],
+											  'data': [ele[1] for ele in sorted_countries]}
 
 	return {'infoType': 'crossTable', 'infoData': parsedResult}
 
