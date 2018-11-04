@@ -38,10 +38,16 @@ def login(request):
     mem = Member.objects.filter(username=request.POST['username'], password=request.POST['password'])
     if mem.exists():
         print "user logged in"
-        return HttpResponse("<h1>logged in</h1>")
+        data = {
+            "logged": "true"
+        }
+        return HttpResponse(json.dumps(data))
     else:
         print "access denied"
-        return HttpResponse("Unauthorized Access")
+        data = {
+            "logged": "false"
+        }
+        return HttpResponse(json.dumps(data))
     #user = authenticate(request, username=username, password=password)
     #if user is not None:
     #    login(request,user)
