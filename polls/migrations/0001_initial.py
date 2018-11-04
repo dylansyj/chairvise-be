@@ -4,6 +4,10 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
+def create_data(apps, schemae_edtior):
+    User = apps.get_model(settings.Member)
+    user = User(id = 1, username="dylansyj@gmail.com", password="Cookies1")
+    user.save()
 
 class Migration(migrations.Migration):
 
@@ -21,4 +25,5 @@ class Migration(migrations.Migration):
                 ('password', models.CharField(max_length=100)),
             ],
         ),
+        migrations.RunPython(create_data),
     ]

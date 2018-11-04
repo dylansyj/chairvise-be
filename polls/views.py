@@ -16,12 +16,9 @@ from models import Member
 # Create your views here.
 # Note: a view is a func taking the HTTP request and returns sth accordingly
 from rest_framework.decorators import api_view
-from django.http import HttpResponse
-
 
 def public(request):
     return HttpResponse("You don't need to be authenticated to see this")
-
 
 @api_view(['GET'])
 def private(request):
@@ -33,20 +30,24 @@ def index(request):
 def test(request):
 	return HttpResponse("<h1>This is the very first HTTP request!</h1>")
 
+@csrf_exempt
 def login(request):
-	print "Checking if user is able to log in"
-	if request.method == "POST":
-		username = request.POST['username']
-		password = request.POST['password']
-		user = authenticate(request, username=username, password=password)
-		if user is not None:
-			login(request,user)
-			#redirect to home page for uploading
-		#else:
-			#return 'invalid login'
-	else:
-		return HttpResponse("POST method not defined")
-
+    print "Checking if user is able to log in"
+    print request.POST
+    print request.content_type
+    mem = Member.objects.filter(username=request.POST['username'], password=request.POST['password'])
+    if mem.exists():
+        print "user logged in"
+        return HttpResponse("<h1>logged in</h1>")
+    else:
+        print "access denied"
+        return HttpResponse("Unauthorized Access")
+    #user = authenticate(request, username=username, password=password)
+    #if user is not None:
+    #    login(request,user)
+    #    return HttpResponse("Logged in")
+    #else:
+    #    return HttpResponse("Failed to log in")
 #add in register method
 
 
