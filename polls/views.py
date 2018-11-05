@@ -12,6 +12,7 @@ import json
 from utils import parseCSVFileFromDjangoFile, isNumber, returnTestChartData
 from getInsight import parseAuthorCSVFile, getReviewScoreInfo, getAuthorInfo, getReviewInfo, getSubmissionInfo
 from models import Member
+from models import MemberFileData
 
 # Create your views here.
 # Note: a view is a func taking the HTTP request and returns sth accordingly
@@ -58,7 +59,17 @@ def login(request):
 
 
 #add in retrieve-data method (subjected to user)
-
+@csrf_exempt
+def saveData(request):
+    print "Inside save data function"
+    #save data to model
+    x = MemberFileData("user1", request.body)
+    x.save()
+    print "Data saved in database"
+    data = {
+        "saved": "true"
+    }
+    return HttpResponse(json.dumps(data))
 
 # Note: csr: cross site request, adding this to enable request from localhost
 @csrf_exempt
