@@ -75,19 +75,24 @@ def login(request):
 @csrf_exempt
 def viewUser(request):
 	print "Inside view function"
+	num = request.POST['articleId']
+	print "article id = "
+	print request.POST['articleId']
 	try:
-		memberfile_instance = MemberFileData.objects.filter(id=27).values('data')
+		member = Member.objects.only('username').get(username=request.POST['username'])
+		memberfile_instance = MemberFileData.objects.filter(id = request.POST['articleId'], user=member).values('data')
 		#print memberfile_instance
 	except Exception as e:
 		print(e)
 	print list(memberfile_instance)
 	return HttpResponse(json.dumps(list(memberfile_instance)))
-	
+
 @csrf_exempt
 def requestUser(request):
 	print "Inside request function"
 	try:
-		memberfile_instance = MemberFileData.objects.all().values('id')
+		member = Member.objects.only('username').get(username=request.POST['username'])
+		memberfile_instance = MemberFileData.objects.filter(user=member).values('id')
 		instance_list = list(memberfile_instance)
 		#print instance_list
 	except Exception as e:
@@ -121,7 +126,8 @@ def uploadCSV(request):
 			# csvFile = request.FILES['file']
 			print "Now we got the csv file"
 		try:
-			memberfile_instance = MemberFileData.objects.create(data=json.dumps(rowContent))
+			member = Member.objects.only('username').get(username=request.POST['username'])
+			memberfile_instance = MemberFileData.objects.create(data=json.dumps(rowContent),user=member)
 		except Exception as e:
 			print(e)
 		print "saved jsonField in database"
