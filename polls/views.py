@@ -6,8 +6,9 @@ from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
+from django.http import JsonResponse
 
-import json
+import json, ast
 
 from utils import parseCSVFileFromDjangoFile, isNumber, returnTestChartData
 from getInsight import parseAuthorCSVFile, getReviewScoreInfo, getAuthorInfo, getReviewInfo, getSubmissionInfo
@@ -59,17 +60,39 @@ def login(request):
 
 
 #add in retrieve-data method (subjected to user)
+#@csrf_exempt
+#def saveData(request):
+#    print "Inside save data function"
+#    #save data to model
+#    x = MemberFileData("user1", request.body)
+#    x.save()
+#    print "Data saved in database"
+#    data = {
+#        "saved": "true"
+#    }
+#    return HttpResponse(json.dumps(data))
+
 @csrf_exempt
-def saveData(request):
-    print "Inside save data function"
-    #save data to model
-    x = MemberFileData("user1", request.body)
-    x.save()
-    print "Data saved in database"
-    data = {
-        "saved": "true"
-    }
-    return HttpResponse(json.dumps(data))
+def viewUser(request):
+	print "Inside view function"
+	try:
+		memberfile_instance = MemberFileData.objects.filter(id=27).values('data')
+		#print memberfile_instance
+	except Exception as e:
+		print(e)
+	print list(memberfile_instance)
+	return HttpResponse(json.dumps(list(memberfile_instance)))
+	
+@csrf_exempt
+def requestUser(request):
+	print "Inside request function"
+	try:
+		memberfile_instance = MemberFileData.objects.all().values('id')
+		instance_list = list(memberfile_instance)
+		#print instance_list
+	except Exception as e:
+		print(e)
+	return HttpResponse(json.dumps(instance_list))
 
 # Note: csr: cross site request, adding this to enable request from localhost
 @csrf_exempt
@@ -97,7 +120,12 @@ def uploadCSV(request):
 	# current problem: request from axios not recognized as POST
 			# csvFile = request.FILES['file']
 			print "Now we got the csv file"
-
+		try:
+			memberfile_instance = MemberFileData.objects.create(data=json.dumps(rowContent))
+		except Exception as e:
+			print(e)
+		print "saved jsonField in database"
+		print rowContent
 		return HttpResponse(json.dumps(rowContent))
 		# return HttpResponse("Got the CSV file.")
 	else:

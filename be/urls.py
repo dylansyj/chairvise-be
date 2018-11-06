@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from polls.views import index, test, uploadCSV, login, public, private, saveData
+from polls.views import index, test, uploadCSV, login, public, private, requestUser, viewUser
 
 urlpatterns = [
 	url(r'^$', index, name='home'),		# This is the default url
@@ -27,5 +27,6 @@ urlpatterns = [
     url(r'^login/', login, name='login'),
     url(r'^api/public/', public),
     url(r'^api/private/', private),
-    url(r'^savedata/', saveData, name='savedata')
+    url(r'^requestUser/', requestUser),
+    url(r'^viewUser/', viewUser)
 ]

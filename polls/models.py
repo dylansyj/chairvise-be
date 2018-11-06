@@ -13,5 +13,5 @@ class Member(models.Model):
         return self.name
 
 class MemberFileData(models.Model):
-    user = models.ForeignKey('Member',on_delete=models.CASCADE)
+    #user = models.ForeignKey('Member',on_delete=models.CASCADE)
     data = JSONField()
