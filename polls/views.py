@@ -38,7 +38,7 @@ def uploadCSV(request):
 		elif "submission.csv" in fileName:
 			rowContent = getSubmissionInfo(csvFile)
 		elif "cross.csv" in fileName:
-			getCrossTableInfo()
+			rowContent = getCrossTableInfo()
 		else:
 			rowContent = returnTestChartData(csvFile)
 
