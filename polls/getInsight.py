@@ -40,6 +40,7 @@ def getAuthorInfo(inputFile):
 
 	lines = parseCSVFile(inputFile)[1:]
 	lines = [ele for ele in lines if ele]
+	print lines;
 
 	# store in session
 	s['authorLines'] = lines;
