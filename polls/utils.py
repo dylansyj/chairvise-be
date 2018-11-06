@@ -17,15 +17,12 @@ def parseCSVFile(inputFile):
 
 	Returns: list of lists (inner list represent each row)
 	"""
-
 	csvFile = inputFile
 	dialect = csv.Sniffer().sniff(codecs.EncodedFile(csvFile, "utf-8").read(1024))
 	csvFile.open()
 	# reader = csv.reader(codecs.EncodedFile(csvFile, "utf-8"), delimiter=',', dialect=dialect)
 	reader = csv.reader(codecs.EncodedFile(csvFile, "utf-8"), delimiter=',', dialect='excel')
-
 	rowResults = [row for row in reader]
-
 	return rowResults
 
 def testCSVFileFormatMatching(inputFile, selectedType):
