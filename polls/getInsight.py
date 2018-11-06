@@ -49,7 +49,7 @@ def getAuthorInfo(inputFile):
 		# authorInfo = line.replace("\"", "").split(",")
 		# print authorInfo
 		authorList.append({'name': authorInfo[1] + " " + authorInfo[2], 'country': authorInfo[4], 'affiliation': authorInfo[5]})
-	
+
 
 	authors = [ele['name'] for ele in authorList if ele] # adding in the if ele in case of empty strings; same applies below
 	topAuthors = Counter(authors).most_common(10)
@@ -97,7 +97,7 @@ def getReviewScoreInfo(inputFile):
 def getReviewInfo(inputFile):
 	"""
 	review.csv
-	data format: 
+	data format:
 	review ID | paper ID? | reviewer ID | reviewer name | unknown | text | scores | overall score | unknown | unknown | unknown | unknown | date | time | recommend?
 	File has NO header
 
@@ -171,7 +171,7 @@ def getReviewInfo(inputFile):
 def getSubmissionInfo(inputFile):
 	"""
 	submission.csv
-	data format: 
+	data format:
 	submission ID | track ID | track name | title | authors | submit time | last update time | form fields | keywords | decision | notified | reviews sent | abstract
 	File has header
 	"""
