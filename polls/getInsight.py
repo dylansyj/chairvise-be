@@ -34,13 +34,13 @@ def getAuthorInfo(inputFile):
 	"""
 	author.csv: header row, author names with affiliations, countries, emails
 	data format:
-	submission ID | f name | s name | email | country | affiliation | page | person ID | corresponding?
+	submission # | first name | last name | email | country | organization | Web page | person # | corresponding?
 	"""
 	parsedResult = {}
 
 	parsedCSV = parseCSVFile(inputFile)
 	# store in session
-	s['authorLines'] = parsedCSV;
+	s['authorCSV'] = parsedCSV;
 	
 	metaHeader = parsedCSV[0]
 	header = parsedCSV[1]
@@ -118,7 +118,7 @@ def getReviewInfo(inputFile):
 	parsedResult = {}
 	parsedCSV = parseCSVFile(inputFile)
 	# store in session
-	s['reviewLines'] = parsedCSV;
+	s['reviewCSV'] = parsedCSV;
 
 	metaHeader = parsedCSV[0]
 	header = parsedCSV[1]
@@ -193,7 +193,7 @@ def getSubmissionInfo(inputFile):
 	parsedResult = {}
 	parsedCSV = parseCSVFile(inputFile)
 	# store in session
-	s['submissionLines'] = parsedCSV;
+	s['submissionCSV'] = parsedCSV;
 
 	metaHeader = parsedCSV[0]
 	header = parsedCSV[1]
@@ -304,20 +304,21 @@ def getSubmissionInfo(inputFile):
 def getCrossTableInfo():
 	"""
 	data formats:
-	authorLines - submission ID | f name | s name | email | country | affiliation | page | person ID | corresponding
-	submissionLines - submission ID | track ID | track name | title | authors | submit time | last update time | form fields | keywords | decision | notified | reviews sent | abstract
-	reviewLines - review ID | paper ID? | reviewer ID | reviewer name | unknown | text | scores | overall score | unknown | unknown | unknown | unknown | date | time | recommend?
+	authorHeader - submission # | first name | last name | email | country | organization | Web page | person # | corresponding?
+	submissionHeader - # | track # | track name | title | authors | submitted | last updated | form fields | keywords | decision | notified | reviews sent | abstract
+	reviewHeader - review# | submission# | review assignment# | reviewer name | field# | review comments | overall evaluation | overall evaluation score | 
+		subreviewer info | subreviewer info1 | subreviewer info2 | subreviewer info3 | review date | review time | recommended?
 	"""
-	crossTable = getCrossTable()
+	crossTable, authorHeader, submissionHeader, reviewHeader = getCrossTable()
 	parsedResult = {}
 
 	# get top accepted affiliations
 	# extract all accepted affiliations
 	affiliations = []
 	for row in crossTable.values():
-		if row['submission'][9] == 'accept':
+		if row['submission'][submissionHeader.index("decision")] == 'accept':
 			for author in row['author']:
-				affiliations.append(author[5])
+				affiliations.append(author[authorHeader.index("organization")])
 	topAffiliations = Counter(affiliations).most_common(10)
 	parsedResult['topAffiliationsByAcceptance'] = {'labels': [ele[0] for ele in topAffiliations], 'data': [ele[1] for ele in topAffiliations]}
 
@@ -332,13 +333,13 @@ def getCrossTableInfo():
 		if numReviews > 0:
 			for review in reviews:
 				# get review avg tabulated score
-				confidence = float(review[6].split("\n")[1].split(": ")[1])
-				score = float(review[6].split("\n")[0].split(": ")[1])
+				confidence = float(review[reviewHeader.index("overall evaluation")].split("\n")[1].split(": ")[1])
+				score = float(review[reviewHeader.index("overall evaluation")].split("\n")[0].split(": ")[1])
 				totalTabulatedScore += (confidence * score)
 			# update each affiliation new total score and count
 			authors = row['author']
 			for author in authors:
-				affi = author[5]
+				affi = author[authorHeader.index("organization")]
 				# update if past affiliations have been recorded
 				if affi in affiliationsWithScoreAndCount:
 					currAffi = affiliationsWithScoreAndCount[affi]
@@ -369,13 +370,13 @@ def getCrossTableInfo():
 		if numReviews > 0:
 			for review in reviews:
 				# get review avg tabulated score
-				confidence = float(review[6].split("\n")[1].split(": ")[1])
-				score = float(review[6].split("\n")[0].split(": ")[1])
+				confidence = float(review[reviewHeader.index("overall evaluation")].split("\n")[1].split(": ")[1])
+				score = float(review[reviewHeader.index("overall evaluation")].split("\n")[0].split(": ")[1])
 				totalTabulatedScore += (confidence * score)
 			# update each country new total score and count
 			authors = row['author']
 			for author in authors:
-				country = author[4]
+				country = author[authorHeader.index("country")]
 				# update if past countries have been recorded
 				if country in countriesWithScoreAndCount:
 					currCountry = countriesWithScoreAndCount[country]
@@ -400,16 +401,32 @@ def getCrossTableInfo():
 def getCrossTable():
 	"""
 	data formats:
-	authorLines - submission ID | f name | s name | email | country | affiliation | page | person ID | corresponding
-	submissionLines - submission ID | track ID | track name | title | authors | submit time | last update time | form fields | keywords | decision | notified | reviews sent | abstract
-	reviewLines - review ID | paper ID? | reviewer ID | reviewer name | unknown | text | scores | overall score | unknown | unknown | unknown | unknown | date | time | recommend?
+	authorHeader - submission # | first name | last name | email | country | organization | Web page | person # | corresponding?
+	submissionHeader - # | track # | track name | title | authors | submitted | last updated | form fields | keywords | decision | notified | reviews sent | abstract
+	reviewHeader - review# | submission# | review assignment# | reviewer name | field# | review comments | overall evaluation | overall evaluation score | 
+		subreviewer info | subreviewer info1 | subreviewer info2 | subreviewer info3 | review date | review time | recommended?
 	"""
 	# iterate through submission list, storing each submission id as a key whose values contain author, submission and review details
 	# a submission and have multiple authors and multiple reviews
 	crossTable = {}
-	authorLines = s['authorLines']
-	submissionLines = s['submissionLines']
-	reviewLines = s['reviewLines']
+	authorCSV = s['authorCSV']
+	authorMetaHeader = authorCSV[0]
+	authorHeader = authorCSV[1]
+	authorDataIndex = int(float(authorMetaHeader[0]))
+	authorLines = authorCSV[authorDataIndex:]
+
+	submissionCSV = s['submissionCSV']
+	submissionMetaHeader = submissionCSV[0]
+	submissionHeader = submissionCSV[1]
+	submissionDataIndex = int(float(submissionMetaHeader[0]))
+	submissionLines = submissionCSV[submissionDataIndex:]
+	
+	reviewCSV = s['reviewCSV']
+	reviewMetaHeader = reviewCSV[0]
+	reviewHeader = reviewCSV[1]
+	reviewDataIndex = int(float(reviewMetaHeader[0]))
+	reviewLines = reviewCSV[reviewDataIndex:]
+
 	# store all submission details with submission ID as the key
 	for submissionDetail in submissionLines:
 		submissionID = submissionDetail[0]
@@ -436,7 +453,7 @@ def getCrossTable():
 		else:
 			crossTable[submissionID]['review'] = [reviewDetail]
 
-	return crossTable
+	return (crossTable, authorHeader, submissionHeader, reviewHeader)
 
 if __name__ == "__main__":
 	parseCSVFile(fileName)
