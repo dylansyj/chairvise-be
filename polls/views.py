@@ -134,7 +134,7 @@ def uploadCSV(request):
 		except Exception as e:
 			print(e)
 		print "saved jsonField in database"
-		print rowContent
+		#print rowContent
 		return HttpResponse(json.dumps(rowContent))
 		# return HttpResponse("Got the CSV file.")
 	else:

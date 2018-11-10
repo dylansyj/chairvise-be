@@ -195,8 +195,7 @@ def getSubmissionInfo(inputFile):
 	parsedResult = {}
 	parsedCSV = parseCSVFile(inputFile)
 	# store in session
-	s['submissionCSV'] = parsedCSV;
-
+	s['submissionCSV'] = parsedCSV
 	metaHeader = parsedCSV[0]
 	header = parsedCSV[1]
 	dataIndex = int(float(metaHeader[0]))
@@ -256,6 +255,9 @@ def getSubmissionInfo(inputFile):
 	comparableAcceptanceRate = {}
 	topAuthorsByTrack = {}
 
+	# for alex keywords
+	s['keywordlist'] = allKeywordList
+
 	# Obtained from the JCDL.org website: past conferences
 	comparableAcceptanceRate['year'] = [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018]
 	comparableAcceptanceRate['Full Papers'] = [0.29, 0.28, 0.27, 0.29, 0.29, 0.30, 0.29, 0.30]
@@ -299,7 +301,6 @@ def getSubmissionInfo(inputFile):
 	parsedResult['timeSeries'] = timeSeries
 	parsedResult['lastEditSeries'] = lastEditSeries
 	parsedResult['comparableAcceptanceRate'] = comparableAcceptanceRate
-
 	return {'infoType': 'submission', 'infoData': parsedResult}
 
 # this method should only be called when all 3 files have been uploaded at least once
@@ -398,6 +399,55 @@ def getCrossTableInfo():
 	parsedResult['topCountriesByScore'] = {'labels': [ele[0] for ele in sorted_countries],
 											  'data': [ele[1] for ele in sorted_countries]}
 
+	## get review score vs top keywords
+	# load keyword list with index
+	keywords = s['keywordlist']
+	topKeywords = [k[0] for k in keywords]
+	keywordAndScore = {}
+	keywordAndExpertise = {}
+	for topKeyword in topKeywords:
+		keywordAndScore[topKeyword] = []
+		keywordAndExpertise[topKeyword] = []
+
+	for row in crossTable.values():
+		# get keyword
+		submission = row['submission']
+		currentKeywords = [str(submission[submissionHeader.index("keywords")]).lower().replace("\r", "").split("\n")]
+		currentKeywords = [ele for item in currentKeywords for ele in item]
+		intersect = [keyword for keyword in currentKeywords if keyword in topKeywords]
+
+		# if not in top 20
+		if len(intersect) == 0:
+			continue
+
+		reviews = row['review']
+
+		# if no reviews
+		if len(reviews) == 0:
+			continue
+
+		# get the review details
+		for keyword in intersect:
+			for review in reviews:
+				# get weighted scores
+				confidence = float(review[reviewHeader.index("overall evaluation")].split("\n")[1].split(": ")[1])
+				score = float(review[reviewHeader.index("overall evaluation")].split("\n")[0].split(": ")[1])
+				keywordAndScore[keyword].append(score * confidence)
+				# get expertise
+				keywordAndExpertise[keyword].append(float(review[reviewHeader.index("field#")]))
+	# get average scores
+	averageScores = []
+	averageExpertise = []
+	for topKeyword in topKeywords:
+		scores = keywordAndScore[topKeyword]
+		averageScores.append(sum(scores) / float(len(scores)))
+		expertise = keywordAndExpertise[topKeyword]
+		averageExpertise.append(sum(expertise) / float(len(expertise)))
+
+	parsedResult['topKeywordsWithWeightedScores'] = {'labels': topKeywords, 'data': averageScores}
+	parsedResult['topKeywordsWithExpertise'] = {'labels': topKeywords, 'data': averageExpertise}
+
+	print(parsedResult)
 	return {'infoType': 'crossTable', 'infoData': parsedResult}
 
 def getCrossTable():
