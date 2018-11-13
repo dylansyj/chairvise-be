@@ -6,7 +6,7 @@ from django.contrib.postgres.fields import JSONField
 
 # Create your models here.
 class Member(models.Model):
-    username = models.CharField(max_length=100)
+    username = models.CharField(max_length=100, primary_key=True)
     password = models.CharField(max_length=100)
 
     def __str__(self):

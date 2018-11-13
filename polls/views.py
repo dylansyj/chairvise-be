@@ -99,6 +99,29 @@ def requestUser(request):
 		print(e)
 	return HttpResponse(json.dumps(instance_list))
 
+@csrf_exempt
+def deleteData(request):
+	print "Deleting Data"
+	try:
+		member = Member.objects.only('username').get(username=request.POST['username'])
+		MemberFileData.objects.filter(id = request.POST['articleId'], user=member).delete()
+	except Exception as e:
+		print(e)
+	return HttpResponse("Delete Success")
+
+@csrf_exempt
+def register(request):
+	print "Registering user"
+	user = request.POST['username']
+	pw = request.POST['password']
+	try:
+		Member.objects.create(username=user,password=pw)
+	except IntegrityError:
+		status = 'user already exists'
+	else:
+		status = 'new user was created'
+	return HttpResponse(status)
+
 # Note: csr: cross site request, adding this to enable request from localhost
 @csrf_exempt
 def uploadCSV(request):
