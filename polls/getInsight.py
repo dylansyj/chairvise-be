@@ -179,6 +179,7 @@ def getReviewInfo(inputFile):
 	parsedResult['meanRecommend'] = sum(recommendList) / len(recommendList)
 	parsedResult['meanConfidence'] = sum(confidenceList) / len(confidenceList)
 	parsedResult['recommendList'] = recommendList
+	parsedResult['confidenceList'] = confidenceList
 	parsedResult['scoreDistribution'] = {'labels': scoreDistributionLabels, 'counts': scoreDistributionCounts}
 	parsedResult['recommendDistribution'] = {'labels': recommendDistributionLabels, 'counts': recommendDistributionCounts}
 
