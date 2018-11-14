@@ -145,21 +145,14 @@ def uploadCSV(request):
 			rowContent = returnTestChartData(csvFile)
 
 		print type(csvFile.name)
-
-		if request.POST:
-	# current problem: request from axios not recognized as POST
-			# csvFile = request.FILES['file']
-			print "Now we got the csv file"
-
-		try:
-			member = Member.objects.only('username').get(username=request.POST['username'])
-			memberfile_instance = MemberFileData.objects.create(data=json.dumps(rowContent),user=member)
-		except Exception as e:
-			print(e)
-		print "saved jsonField in database"
-		print rowContent
-		return HttpResponse(json.dumps(rowContent))
+        #print request.POST['username']
+        if not "cross.csv" in fileName:
+            try:
+    			member = Member.objects.only('username').get(username=request.POST['username'])
+    			memberfile_instance = MemberFileData.objects.create(data=json.dumps(rowContent),user=member)
+            except Exception as e:
+    			print(e)
+            print "saved jsonField in database"
+		#print rowContent
+        return HttpResponse(json.dumps(rowContent))
 		# return HttpResponse("Got the CSV file.")
-	else:
-		print "Not found the file!"
-		return HttpResponseNotFound('Page not found for CSV')
